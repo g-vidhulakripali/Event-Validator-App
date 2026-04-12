@@ -10,6 +10,8 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.button.MaterialButton;
+
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -24,15 +26,15 @@ import okhttp3.Response;
 
 public class ResultActivity extends AppCompatActivity {
 
-    // IMPORTANT: Use http://10.0.2.2:3000/api/v1/scan for Android Emulator testing
-    // Or your machine's local IP (e.g., http://192.168.1.x:3000) if testing on your physical Vivo phone.
-    private static final String API_URL = "https://eventticketgenerator.onrender.com/api/v1/scan";
-
-    private TextView tvScanStatus, tvAttendeeName, tvAttendeeEmail, tvTicketId, tvRawQrData;
+    private TextView tvScanStatus, tvAttendeeName, tvAttendeeEmail, tvTicketId, tvRawQrData, tvSelectedEventType;
     private ProgressBar progressBar;
     private LinearLayout attendeeInfoLayout;
+    private MaterialButton btnAcceptAttendance;
 
     private OkHttpClient client;
+    private String selectedEventType;
+    private GoogleSheetsService.AttendeeRecord verifiedAttendee;
+    private boolean isSubmittingAttendance;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,8 +49,17 @@ public class ResultActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         attendeeInfoLayout = findViewById(R.id.attendeeInfoLayout);
         tvRawQrData = findViewById(R.id.tvRawQrData);
+        tvSelectedEventType = findViewById(R.id.tvSelectedEventType);
+        btnAcceptAttendance = findViewById(R.id.btnAcceptAttendance);
 
         client = new OkHttpClient();
+        selectedEventType = getIntent().getStringExtra("EVENT_TYPE");
+        if (selectedEventType == null || selectedEventType.trim().isEmpty()) {
+            selectedEventType = "Conference";
+        }
+
+        tvSelectedEventType.setText("Selected Check-In: " + selectedEventType);
+        btnAcceptAttendance.setOnClickListener(v -> acceptAttendance());
 
         // Get the scanned data from the camera
         String qrPayload = getIntent().getStringExtra("QR_DATA");
@@ -58,7 +69,7 @@ public class ResultActivity extends AppCompatActivity {
             tvRawQrData.setText(qrPayload);
 
             // Call the backend with the exact slug you requested
-            verifyTicketWithBackend(qrPayload, "hsm-developer-community-2026");
+            verifyTicketWithBackend(qrPayload, BuildConfig.EVENT_SLUG);
         } else {
             tvRawQrData.setText("ERROR: NULL");
             showError("No QR Code Data Found");
@@ -82,7 +93,7 @@ public class ResultActivity extends AppCompatActivity {
 
             // 2. Create the POST Request
             Request request = new Request.Builder()
-                    .url(API_URL)
+                    .url(BuildConfig.SCAN_API_URL)
                     .post(body)
                     .build();
 
@@ -135,19 +146,101 @@ public class ResultActivity extends AppCompatActivity {
     }
 
     private void showSuccess(JSONObject data) {
-        tvScanStatus.setText("Scan Successful!");
+        verifiedAttendee = new GoogleSheetsService.AttendeeRecord(
+                data.optString("name", ""),
+                data.optString("email", ""),
+                data.optString("ticketId", "")
+        );
+
+        tvScanStatus.setText("Scan Successful! Ready to accept " + selectedEventType + " attendance.");
         tvScanStatus.setTextColor(Color.parseColor("#4CAF50")); // Green
 
         attendeeInfoLayout.setVisibility(View.VISIBLE);
-        tvAttendeeName.setText(data.optString("name", "N/A"));
-        tvAttendeeEmail.setText(data.optString("email", "N/A"));
-        tvTicketId.setText(data.optString("ticketId", "N/A"));
+        tvAttendeeName.setText(fallbackValue(verifiedAttendee.name));
+        tvAttendeeEmail.setText(fallbackValue(verifiedAttendee.email));
+        tvTicketId.setText(fallbackValue(verifiedAttendee.ticketId));
+        btnAcceptAttendance.setVisibility(View.VISIBLE);
+        btnAcceptAttendance.setEnabled(true);
+        btnAcceptAttendance.setText("Accept");
     }
 
     private void showError(String message) {
+        verifiedAttendee = null;
         progressBar.setVisibility(View.GONE);
         tvScanStatus.setText(message);
         tvScanStatus.setTextColor(Color.parseColor("#F44336")); // Red
         attendeeInfoLayout.setVisibility(View.GONE);
+        btnAcceptAttendance.setVisibility(View.GONE);
+    }
+
+    private void acceptAttendance() {
+        if (verifiedAttendee == null || isSubmittingAttendance) {
+            return;
+        }
+
+        if (!BuildConfig.GOOGLE_SHEETS_ENABLED) {
+            showAcceptanceError("Google Sheets sync is disabled. Set GOOGLE_SHEETS_ENABLED=true in .env.");
+            return;
+        }
+
+        isSubmittingAttendance = true;
+        progressBar.setVisibility(View.VISIBLE);
+        btnAcceptAttendance.setEnabled(false);
+        tvScanStatus.setText("Marking " + selectedEventType + " attendance...");
+        tvScanStatus.setTextColor(Color.parseColor("#333333"));
+
+        new Thread(() -> {
+            try {
+                GoogleSheetsService sheetsService = new GoogleSheetsService(client);
+                GoogleSheetsService.AttendanceUpdateResult result = sheetsService.markAttendance(
+                        BuildConfig.GOOGLE_SHEETS_SPREADSHEET_ID,
+                        BuildConfig.GOOGLE_SHEETS_RANGE,
+                        BuildConfig.GOOGLE_SHEETS_CLIENT_EMAIL,
+                        BuildConfig.GOOGLE_SHEETS_PRIVATE_KEY,
+                        selectedEventType,
+                        BuildConfig.GOOGLE_SHEETS_ATTENDED_VALUE,
+                        verifiedAttendee
+                );
+
+                runOnUiThread(() -> {
+                    isSubmittingAttendance = false;
+                    progressBar.setVisibility(View.GONE);
+
+                    if (result.success) {
+                        tvScanStatus.setText(result.message);
+                        tvScanStatus.setTextColor(Color.parseColor("#4CAF50"));
+                        btnAcceptAttendance.setText("Accepted");
+                        btnAcceptAttendance.setEnabled(false);
+                    } else {
+                        showAcceptanceError(result.message);
+                    }
+                });
+            } catch (Exception exception) {
+                Log.e("GOOGLE_SHEETS", "Attendance update failed", exception);
+                runOnUiThread(() -> {
+                    isSubmittingAttendance = false;
+                    progressBar.setVisibility(View.GONE);
+                    showAcceptanceError("Could not update Google Sheets. " + safeMessage(exception));
+                });
+            }
+        }).start();
+    }
+
+    private void showAcceptanceError(String message) {
+        tvScanStatus.setText(message);
+        tvScanStatus.setTextColor(Color.parseColor("#F44336"));
+        btnAcceptAttendance.setEnabled(true);
+    }
+
+    private String fallbackValue(String value) {
+        return value == null || value.trim().isEmpty() ? "N/A" : value;
+    }
+
+    private String safeMessage(Exception exception) {
+        String rawMessage = exception.getMessage();
+        if (rawMessage == null || rawMessage.trim().isEmpty()) {
+            return "Please try again.";
+        }
+        return rawMessage;
     }
 }

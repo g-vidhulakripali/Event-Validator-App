@@ -1,108 +1,138 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="32dp"
-    android:gravity="center_horizontal"
     android:background="#F8F9FA">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="#EBEBEB"
-        android:padding="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="32dp"
-        android:elevation="2dp">
+        android:padding="32dp"
+        android:gravity="center_horizontal">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Debug: Raw QR Payload"
-            android:textColor="#555555"
-            android:textStyle="bold"
-            android:textSize="12sp" />
-
-        <TextView
-            android:id="@+id/tvRawQrData"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#EBEBEB"
+            android:padding="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="32dp"
+            android:elevation="2dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Debug: Raw QR Payload"
+                android:textColor="#555555"
+                android:textStyle="bold"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tvRawQrData"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:fontFamily="monospace"
+                android:textColor="#000000"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp" />
+
+        <TextView
+            android:id="@+id/tvScanStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:text="Verifying Ticket..."
+            android:textColor="#333333"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvSelectedEventType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:text="Selected Check-In: Conference"
+            android:textColor="#5D3FF5"
             android:textSize="14sp"
-            android:textColor="#000000"
-            android:layout_marginTop="4dp"
-            android:fontFamily="monospace"/>
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/attendeeInfoLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@android:color/white"
+            android:elevation="4dp"
+            android:padding="24dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Attendee Name"
+                android:textColor="#888888"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tvAttendeeName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:textColor="#000000"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Email"
+                android:textColor="#888888"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tvAttendeeEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:textColor="#000000"
+                android:textSize="16sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ticket ID"
+                android:textColor="#888888"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tvTicketId"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#666666"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAcceptAttendance"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="#4CAF50"
+            android:text="Accept"
+            android:textAllCaps="false"
+            android:visibility="gone"
+            app:cornerRadius="14dp" />
+
     </LinearLayout>
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"/>
-
-    <TextView
-        android:id="@+id/tvScanStatus"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Verifying Ticket..."
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="#333333"
-        android:layout_marginBottom="24dp"/>
-
-    <LinearLayout
-        android:id="@+id/attendeeInfoLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="@android:color/white"
-        android:padding="24dp"
-        android:elevation="4dp"
-        android:visibility="gone">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Attendee Name"
-            android:textColor="#888888"
-            android:textSize="12sp" />
-        <TextView
-            android:id="@+id/tvAttendeeName"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="18sp"
-            android:textColor="#000000"
-            android:layout_marginBottom="16dp"
-            android:textStyle="bold"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Email"
-            android:textColor="#888888"
-            android:textSize="12sp" />
-        <TextView
-            android:id="@+id/tvAttendeeEmail"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="16sp"
-            android:textColor="#000000"
-            android:layout_marginBottom="16dp"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Ticket ID"
-            android:textColor="#888888"
-            android:textSize="12sp" />
-        <TextView
-            android:id="@+id/tvTicketId"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="14sp"
-            android:textColor="#666666"/>
-    </LinearLayout>
-
-</LinearLayout>
+</ScrollView>

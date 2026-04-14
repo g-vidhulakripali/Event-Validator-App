@@ -17,6 +17,16 @@ import com.journeyapps.barcodescanner.ScanOptions;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String COLOR_ACTIVE = "#2F6BFF";
+    private static final String COLOR_ACTIVE_TEXT = "#2458D6";
+    private static final String COLOR_ACTIVE_BG = "#EAF1FF";
+    private static final String COLOR_INACTIVE_BORDER = "#DBE6F5";
+    private static final String COLOR_INACTIVE_TEXT = "#88A0C8";
+    private static final String COLOR_INACTIVE_BG = "#FFFFFF";
+    private static final String COLOR_STATUS_IDLE = "#6A84B6";
+    private static final String COLOR_STATUS_PROGRESS = "#2F6BFF";
+    private static final String COLOR_STATUS_SUCCESS = "#2A9D8F";
+
     // View references
     private MaterialCardView cardConference, cardWorkshop;
     private ImageView iconConference, iconWorkshop;
@@ -30,11 +40,11 @@ public class MainActivity extends AppCompatActivity {
             result -> {
                 if (result.getContents() == null) {
                     // Update status if cancelled
-                    tvScanStatus.setText("Status: Scan cancelled");
+                    updateStatus("Status: Scan cancelled", COLOR_STATUS_IDLE);
                     Toast.makeText(this, "Scan Cancelled", Toast.LENGTH_SHORT).show();
                 } else {
                     // Update status if successful
-                    tvScanStatus.setText("Status: Scan successful!");
+                    updateStatus("Status: Scan successful!", COLOR_STATUS_SUCCESS);
                     String scannedData = result.getContents();
                     Intent intent = new Intent(MainActivity.this, ResultActivity.class);
                     // Pass BOTH the QR data and the event type they selected
@@ -64,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
         // Set Click Listeners for the cards
         cardConference.setOnClickListener(v -> selectEventType(true));
         cardWorkshop.setOnClickListener(v -> selectEventType(false));
+        selectEventType(true);
 
 //        btnOpenScanner.setOnClickListener(v -> {
 //            // Update the main screen UI to show we are busy
@@ -81,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
 
         btnOpenScanner.setOnClickListener(v -> {
             // Update the main screen UI to show we are busy
-            tvScanStatus.setText("Status: Scanner active...");
+            updateStatus("Status: Scanner active...", COLOR_STATUS_PROGRESS);
 
             ScanOptions options = new ScanOptions();
             options.setBeepEnabled(true);
@@ -103,37 +114,38 @@ public class MainActivity extends AppCompatActivity {
             selectedEventType = "Conference";
             tvScanDescription.setText("Point your camera at the attendee's QR code for the Conference.");
 
-            // Set Conference to Active (Purple)
-            cardConference.setStrokeColor(Color.parseColor("#5D3FF5"));
+            cardConference.setStrokeColor(Color.parseColor(COLOR_ACTIVE));
             cardConference.setStrokeWidth(4);
-            cardConference.setCardBackgroundColor(Color.parseColor("#F3F0FF"));
-            tvConference.setTextColor(Color.parseColor("#5D3FF5"));
-            iconConference.setColorFilter(Color.parseColor("#5D3FF5"));
+            cardConference.setCardBackgroundColor(Color.parseColor(COLOR_ACTIVE_BG));
+            tvConference.setTextColor(Color.parseColor(COLOR_ACTIVE_TEXT));
+            iconConference.setColorFilter(Color.parseColor(COLOR_ACTIVE));
 
-            // Set Workshop to Inactive (Grey)
-            cardWorkshop.setStrokeColor(Color.parseColor("#E0E0E0"));
-            cardWorkshop.setStrokeWidth(2);
-            cardWorkshop.setCardBackgroundColor(Color.parseColor("#FFFFFF"));
-            tvWorkshop.setTextColor(Color.parseColor("#888888"));
-            iconWorkshop.setColorFilter(Color.parseColor("#888888"));
+            cardWorkshop.setStrokeColor(Color.parseColor(COLOR_INACTIVE_BORDER));
+            cardWorkshop.setStrokeWidth(1);
+            cardWorkshop.setCardBackgroundColor(Color.parseColor(COLOR_INACTIVE_BG));
+            tvWorkshop.setTextColor(Color.parseColor(COLOR_INACTIVE_TEXT));
+            iconWorkshop.setColorFilter(Color.parseColor(COLOR_INACTIVE_TEXT));
 
         } else {
             selectedEventType = "Workshop";
             tvScanDescription.setText("Point your camera at the attendee's QR code for the Workshop.");
 
-            // Set Workshop to Active (Purple)
-            cardWorkshop.setStrokeColor(Color.parseColor("#5D3FF5"));
+            cardWorkshop.setStrokeColor(Color.parseColor(COLOR_ACTIVE));
             cardWorkshop.setStrokeWidth(4);
-            cardWorkshop.setCardBackgroundColor(Color.parseColor("#F3F0FF"));
-            tvWorkshop.setTextColor(Color.parseColor("#5D3FF5"));
-            iconWorkshop.setColorFilter(Color.parseColor("#5D3FF5"));
+            cardWorkshop.setCardBackgroundColor(Color.parseColor(COLOR_ACTIVE_BG));
+            tvWorkshop.setTextColor(Color.parseColor(COLOR_ACTIVE_TEXT));
+            iconWorkshop.setColorFilter(Color.parseColor(COLOR_ACTIVE));
 
-            // Set Conference to Inactive (Grey)
-            cardConference.setStrokeColor(Color.parseColor("#E0E0E0"));
-            cardConference.setStrokeWidth(2);
-            cardConference.setCardBackgroundColor(Color.parseColor("#FFFFFF"));
-            tvConference.setTextColor(Color.parseColor("#888888"));
-            iconConference.setColorFilter(Color.parseColor("#888888"));
+            cardConference.setStrokeColor(Color.parseColor(COLOR_INACTIVE_BORDER));
+            cardConference.setStrokeWidth(1);
+            cardConference.setCardBackgroundColor(Color.parseColor(COLOR_INACTIVE_BG));
+            tvConference.setTextColor(Color.parseColor(COLOR_INACTIVE_TEXT));
+            iconConference.setColorFilter(Color.parseColor(COLOR_INACTIVE_TEXT));
         }
+    }
+
+    private void updateStatus(String message, String colorHex) {
+        tvScanStatus.setText(message);
+        tvScanStatus.setTextColor(Color.parseColor(colorHex));
     }
 }
